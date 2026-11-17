@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>California Housing Predictor</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px #00000012;
+        }
+
+        h1 { color: #1e293b; margin-top: 0; }
+        p { color: #64748b; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 13px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 22px;
+        }
+
+        button:hover { background: #1d4ed8; }
+
+        #result {
+            margin-top: 24px;
+            padding: 18px;
+            background: #eff6ff;
+            border-radius: 10px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>California Housing Predictor</h1>
+        <p>Machine Learning Model as a Service</p>
+        <p>Enter housing information to predict the median house value.</p>
+
+        <form id="predictForm">
+            <div class="grid">
+                <div>
+                    <label>Median Income</label>
+                    <input id="MedInc" type="number" step="any" value="8.3" required>
+                </div>
+                <div>
+                    <label>House Age</label>
+                    <input id="HouseAge" type="number" step="any" value="25" required>
+                </div>
+                <div>
+                    <label>Average Rooms</label>
+                    <input id="AveRooms" type="number" step="any" value="6" required>
+                </div>
+                <div>
+                    <label>Average Bedrooms</label>
+                    <input id="AveBedrms" type="number" step="any" value="1" required>
+                </div>
+                <div>
+                    <label>Population</label>
+                    <input id="Population" type="number" step="any" value="1200" required>
+                </div>
+                <div>
+                    <label>Average Occupancy</label>
+                    <input id="AveOccup" type="number" step="any" value="3" required>
+                </div>
+                <div>
+                    <label>Latitude</label>
+                    <input id="Latitude" type="number" step="any" value="34.2" required>
+                </div>
+                <div>
+                    <label>Longitude</label>
+                    <input id="Longitude" type="number" step="any" value="-118.3" required>
+                </div>
+            </div>
+            <button type="submit">Predict House Price</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const features = [
+            "MedInc", "HouseAge", "AveRooms", "AveBedrms",
+            "Population", "AveOccup", "Latitude", "Longitude"
+        ];
+
+        document.getElementById("predictForm")
+            .addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                const values = features.map(
+                    name => Number(document.getElementById(name).value)
+                );
+
+                const resultBox = document.getElementById("result");
+                resultBox.style.display = "block";
+                resultBox.textContent = "Predicting...";
+
+                try {
+                    const response = await fetch("/predict", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ features: values })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || "Prediction failed");
+                    }
+
+                    const price = (data.prediction * 100000)
+                        .toLocaleString("en-US", {
+                            maximumFractionDigits: 2
+                        });
+
+                    resultBox.textContent =
+                        "Predicted Median House Value: $" + price;
+                } catch (error) {
+                    resultBox.textContent = "Error: " + error.message;
+                }
+            });
+    </script>
+</body>
+</html>
+  
